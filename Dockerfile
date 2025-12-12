@@ -16,7 +16,7 @@ COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 
 # کپی کد
-COPY bot.py .
+COPY Bot.py .
 
 # پورت
 EXPOSE 8000
