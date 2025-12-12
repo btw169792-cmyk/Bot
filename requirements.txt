@@ -1,4 +1,3 @@
 pyTelegramBotAPI
-moviepy
 flask
-gunicorn  # برای ران کردن وب سرور
+gunicorn
