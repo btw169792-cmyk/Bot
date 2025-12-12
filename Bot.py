@@ -112,14 +112,37 @@ def webhook():
     else:
         return 'Forbidden', 403
 
-# تنظیم وب‌هوک هنگام استارت
-@app.before_first_request
+# تنظیم وب‌هوک موقع استارت (بدون before_first_request)
 def setup_webhook():
+    import time
+    time.sleep(3)  # یه کم صبر می‌کنه تا Render دامنه رو بده
     bot.remove_webhook()
-    url = f"https://{os.environ.get('RENDER_EXTERNAL_HOSTNAME')}/{TOKEN}"
-    bot.set_webhook(url=url)
-    print(f"وب‌هوک تنظیم شد: {url}")
+    hostname = os.environ.get('RENDER_EXTERNAL_HOSTNAME')
+    if hostname:
+        url = f"https://{hostname}/{TOKEN}"
+        try:
+            bot.set_webhook(url=url)
+            print(f"وب‌هوک با موفقیت تنظیم شد: {url}")
+        except Exception as e:
+            print(f"خطا در تنظیم وب‌هوک: {e}")
+    else:
+        print("RENDER_EXTERNAL_HOSTNAME پیدا نشد! وب‌هوک تنظیم نشد.")
 
-if __name__ == '__main__':
-    port = int(os.environ.get('PORT', 8000))
-    app.run(host='0.0.0.0', port=port)
+# این تابع رو موقع استارت صدا می‌زنیم
+setup_webhook()
+
+# فقط برای هلث چک (Render این رو می‌بینه و sleep نمی‌کنه)
+@app.route('/')
+def home():
+    return "ربات ویدیوساز فعاله!"
+
+@app.route(f'/{TOKEN}', methods=['POST'])
+def webhook():
+    if request.headers.get('content-type') == 'application/json':
+        json_string = request.get_data().decode('utf-8')
+        update = telebot.types.Update.de_json(json_string)
+        bot.process_new_updates([update])
+        return '', 200
+    return 'Forbidden', 403
+
+# این خط آخر باشه (gunicorn خودش اجرا می‌کنه، نیازی به if __name__ نیست)
